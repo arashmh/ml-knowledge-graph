@@ -1,0 +1,511 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Knowledge Graph Explorer</title>
+
+    <!-- Open Graph / Social sharing meta -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Knowledge Graph Explorer" />
+    <meta
+      property="og:description"
+      content="Explore 2,000+ ML and mathematics concepts in an interactive 3D knowledge graph. Discover prerequisites, dependencies, and connections."
+    />
+    <meta
+      property="og:url"
+      content="https://the-palindrome.github.io/ml-knowledge-graph/"
+    />
+    <meta
+      property="og:image"
+      content="https://the-palindrome.github.io/ml-knowledge-graph/assets/mathematics-of-machine-learning-cover.jpg"
+    />
+    <meta property="og:site_name" content="Knowledge Graph Explorer" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Knowledge Graph Explorer" />
+    <meta
+      name="twitter:description"
+      content="Explore 2,000+ ML and mathematics concepts in an interactive 3D knowledge graph."
+    />
+    <meta
+      name="twitter:image"
+      content="https://the-palindrome.github.io/ml-knowledge-graph/assets/mathematics-of-machine-learning-cover.jpg"
+    />
+
+    <link rel="stylesheet" href="style.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"
+    />
+    <script
+      defer
+      src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"
+    ></script>
+    <script
+      defer
+      src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+    ></script>
+    <script
+      defer
+      src="https://cdn.jsdelivr.net/npm/marked@15.0.4/marked.min.js"
+    ></script>
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+          "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/",
+          "d3-force-3d": "https://cdn.jsdelivr.net/npm/d3-force-3d@3.0.5/+esm"
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <div id="canvas-container"></div>
+
+    <!-- Tooltip -->
+    <div id="tooltip" aria-hidden="true">
+      <svg
+        id="tooltip-shape"
+        aria-hidden="true"
+        focusable="false"
+        preserveAspectRatio="none"
+      >
+        <path id="tooltip-backdrop-path"></path>
+        <path id="tooltip-connector-path"></path>
+      </svg>
+      <span class="tooltip-label" id="tooltip-label"></span>
+    </div>
+
+    <!-- Top bar -->
+    <div id="top-bar">
+      <div class="top-bar-section">
+        <span id="title">Knowledge Graph Explorer</span>
+      </div>
+      <div class="top-bar-section">
+        <input
+          type="text"
+          id="search"
+          placeholder="Search concepts..."
+          autocomplete="off"
+        />
+      </div>
+      <div class="top-bar-section">
+        <span id="stats"></span>
+      </div>
+      <div class="top-bar-section top-bar-controls">
+        <button
+          id="screenshot-btn"
+          class="layout-btn"
+          type="button"
+          title="Download screenshot"
+        >
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path
+              d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"
+            />
+            <circle cx="12" cy="13" r="4" />
+          </svg>
+        </button>
+        <a
+          id="github-link"
+          href="https://github.com/the-palindrome/ml-knowledge-graph"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="layout-btn"
+          title="View on GitHub"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+            <path
+              d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"
+            />
+          </svg>
+        </a>
+      </div>
+      <div class="top-bar-section top-bar-controls">
+        <div id="layout-selector">
+          <select id="layout-select" aria-label="Choose layout">
+            <option value="force" selected>Force</option>
+            <option value="hierarchical">Hierarchical</option>
+            <option value="cluster">Cluster</option>
+            <option value="radial" disabled>Radial</option>
+          </select>
+        </div>
+        <button id="auto-rotate-btn" class="layout-btn" type="button">
+          Auto-Rotate
+        </button>
+        <button
+          id="settings-btn"
+          class="layout-btn"
+          type="button"
+          aria-controls="settings-shell"
+          aria-expanded="false"
+          title="Show settings panel"
+        >
+          Settings
+        </button>
+      </div>
+    </div>
+
+    <!-- Left settings panel -->
+    <div id="settings-shell" aria-hidden="true">
+      <aside id="settings-panel" aria-labelledby="settings-title">
+        <div id="settings-panel-header" class="panel-header">
+          <h2 id="settings-title" class="panel-header-title">Settings</h2>
+          <button
+            id="settings-close"
+            class="panel-toggle settings-toggle"
+            type="button"
+            aria-controls="settings-panel-body"
+            aria-expanded="true"
+            title="Hide settings panel"
+          >
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <polyline points="9 18 15 12 9 6" />
+            </svg>
+          </button>
+        </div>
+        <div id="settings-panel-body" class="settings-panel-body">
+          <section class="settings-section" aria-labelledby="categories-title">
+            <h3 id="categories-title">Categories</h3>
+            <div id="legend"></div>
+          </section>
+          <section class="settings-section" aria-labelledby="node-coloring-title">
+            <div class="settings-section-heading">
+              <h3 id="node-coloring-title">Node coloring</h3>
+              <span
+                class="settings-help"
+                tabindex="0"
+                aria-describedby="node-coloring-help"
+                aria-label="Explain node coloring options"
+                role="button"
+              >
+                ?
+              </span>
+              <div id="node-coloring-help" class="settings-tooltip" role="tooltip">
+                Categories uses a distinct color for each topic group. Metric options
+                apply a continuous colormap to the selected node property, scaled
+                from the lowest value in the graph to the highest value.
+              </div>
+            </div>
+            <label class="settings-label" for="node-coloring-select">Color by</label>
+            <select id="node-coloring-select" class="settings-select">
+              <option value="category">Categories</option>
+              <option value="_pagerank">PageRank</option>
+              <option value="_degree_centrality">Degree centrality</option>
+              <option value="_betweenness_centrality">
+                Betweenness centrality
+              </option>
+              <option value="_descendant_ratio">Descendant ratio</option>
+              <option value="_prerequisite_ratio">Prerequisite ratio</option>
+              <option value="_reachability_ratio">Reachability ratio</option>
+            </select>
+          </section>
+          <section class="settings-section" aria-labelledby="node-sizing-title">
+            <h3 id="node-sizing-title">Node sizing</h3>
+            <label class="settings-label" for="node-sizing-select">Size by</label>
+            <select id="node-sizing-select" class="settings-select">
+              <option value="default">Default</option>
+              <option value="_pagerank">PageRank</option>
+              <option value="_degree_centrality">Degree centrality</option>
+              <option value="_betweenness_centrality">
+                Betweenness centrality
+              </option>
+              <option value="_descendant_ratio">Descendant ratio</option>
+              <option value="_prerequisite_ratio">Prerequisite ratio</option>
+              <option value="_reachability_ratio">Reachability ratio</option>
+            </select>
+          </section>
+        </div>
+      </aside>
+      <div
+        id="settings-resizer"
+        title="Resize settings panel"
+        aria-label="Resize settings panel"
+        role="separator"
+        aria-orientation="vertical"
+        tabindex="0"
+      ></div>
+    </div>
+
+    <!-- Side panels -->
+    <div id="side-panels">
+      <div
+        id="info-resizer"
+        title="Resize node definition panel"
+        aria-label="Resize node definition panel"
+        role="separator"
+        aria-orientation="vertical"
+        tabindex="0"
+      ></div>
+
+      <div id="info-panel">
+        <div id="info-panel-header" class="panel-header">
+          <h2 class="panel-header-title">Definition</h2>
+          <div id="info-panel-controls">
+            <button
+              id="info-toggle"
+              class="panel-toggle"
+              type="button"
+              aria-controls="info-panel-body"
+              aria-expanded="true"
+              title="Collapse node definition panel"
+            >
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <polyline points="15 18 9 12 15 6" />
+              </svg>
+            </button>
+          </div>
+        </div>
+        <div class="info-panel-collapsed-label" aria-hidden="true">
+          Definition
+        </div>
+        <div id="info-panel-body">
+          <h2 id="info-label"></h2>
+          <div id="info-category"></div>
+          <div id="info-definition" class="info-definition"></div>
+          <div id="info-long-description" class="info-long-description"></div>
+          <section id="book-cta" class="book-cta" aria-labelledby="book-cta-title">
+            <div class="book-cta-content">
+              <div class="book-cta-media">
+                <img
+                  class="book-cta-cover"
+                  src="assets/mathematics-of-machine-learning-cover.jpg"
+                  alt="Cover of Mathematics of Machine Learning"
+                  width="2250"
+                  height="2775"
+                  loading="lazy"
+                  decoding="async"
+                />
+              </div>
+              <div class="book-cta-eyebrow">Companion Book</div>
+              <h3 id="book-cta-title" class="book-cta-title">
+                Go deeper with Mathematics of Machine Learning
+              </h3>
+              <p id="book-cta-copy" class="book-cta-copy"></p>
+              <a
+                id="book-cta-link"
+                class="book-cta-button"
+                href="https://www.amazon.com/Mathematics-Machine-Learning-calculus-probability/dp/1837027870/"
+                target="_blank"
+                rel="noopener noreferrer nofollow sponsored"
+                aria-label="View Mathematics of Machine Learning on Amazon"
+              >
+                View on Amazon
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M7 17L17 7" />
+                  <path d="M7 7h10v10" />
+                </svg>
+              </a>
+              <div class="book-cta-note">
+                Best for readers who want a guided path through the foundations,
+                not just isolated concepts.
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+
+      <div
+        id="analytics-resizer"
+        title="Resize node properties panel"
+        aria-label="Resize node properties panel"
+        role="separator"
+        aria-orientation="vertical"
+        tabindex="0"
+      ></div>
+
+      <aside id="analytics-panel" aria-labelledby="analytics-title">
+        <div id="analytics-panel-header" class="panel-header">
+          <h2 id="analytics-title" class="panel-header-title">
+            Node properties
+          </h2>
+          <button
+            id="analytics-toggle"
+            class="panel-toggle analytics-toggle"
+            type="button"
+            aria-controls="analytics-panel-body"
+            aria-expanded="true"
+            title="Collapse node properties panel"
+          >
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <polyline points="15 18 9 12 15 6" />
+            </svg>
+          </button>
+        </div>
+        <div class="analytics-panel-collapsed-label" aria-hidden="true">
+          Node properties
+        </div>
+        <div id="analytics-panel-body" class="analytics-panel-body">
+          <div id="info-depth" class="info-badge"></div>
+          <div id="info-upstream" class="info-stat"></div>
+          <div id="info-downstream" class="info-stat"></div>
+          <div class="info-section metrics-section">
+            <h3>Graph Metrics</h3>
+            <div class="metrics-grid">
+              <div class="metric-row">
+                <span class="metric-label">PageRank</span>
+                <span id="info-pagerank" class="metric-value">N/A</span>
+              </div>
+              <div class="metric-row">
+                <span class="metric-label">Degree centrality</span>
+                <span id="info-degree-centrality" class="metric-value">N/A</span>
+              </div>
+              <div class="metric-row">
+                <span class="metric-label">Betweenness centrality</span>
+                <span id="info-betweenness-centrality" class="metric-value">N/A</span>
+              </div>
+              <div class="metric-row">
+                <span class="metric-label">Descendant ratio</span>
+                <span id="info-descendant-ratio" class="metric-value">N/A</span>
+              </div>
+              <div class="metric-row">
+                <span class="metric-label">Prerequisite ratio</span>
+                <span id="info-prerequisite-ratio" class="metric-value">N/A</span>
+              </div>
+              <div class="metric-row">
+                <span class="metric-label">Reachability ratio</span>
+                <span id="info-reachability-ratio" class="metric-value">N/A</span>
+              </div>
+            </div>
+          </div>
+          <div id="path-highlight-controls" class="path-highlight-controls">
+            <label class="path-highlight-option">
+              <input type="checkbox" id="toggle-prerequisites" checked />
+              <span>Show prerequisites</span>
+            </label>
+            <label class="path-highlight-option">
+              <input type="checkbox" id="toggle-dependents" />
+              <span>Show dependents</span>
+            </label>
+          </div>
+
+          <div id="info-share" class="info-share">
+            <button id="share-x" class="share-btn" title="Share on X (Twitter)">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                <path
+                  d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"
+                />
+              </svg>
+              Share
+            </button>
+            <button id="share-linkedin" class="share-btn" title="Share on LinkedIn">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                <path
+                  d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"
+                />
+              </svg>
+              Share
+            </button>
+            <button id="share-copy" class="share-btn" title="Copy link">
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path
+                  d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"
+                />
+                <path
+                  d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"
+                />
+              </svg>
+              Copy Link
+            </button>
+            <button id="share-embed" class="share-btn" title="Copy embed code">
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <polyline points="16 18 22 12 16 6" />
+                <polyline points="8 6 2 12 8 18" />
+              </svg>
+              Embed
+            </button>
+          </div>
+
+          <div class="info-section">
+            <h3 id="info-prereqs-title">Direct Prerequisites</h3>
+            <div id="info-prereqs"></div>
+          </div>
+          <div class="info-section">
+            <h3 id="info-deps-title">Direct Dependents</h3>
+            <div id="info-deps"></div>
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    <!-- Controls hint -->
+    <div id="controls-hint">
+      Rotate: drag &middot; Zoom: scroll &middot; Pan: right-drag<br />
+      Click: focus selection &middot; Shift+Click: add to selection &middot; Double-click: radial view
+    </div>
+
+    <!-- Toast notification -->
+    <div id="toast"></div>
+
+    <script type="module" src="js/main.js"></script>
+  </body>
+</html>
