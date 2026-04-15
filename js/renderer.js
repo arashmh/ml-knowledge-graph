@@ -908,7 +908,6 @@ export function showHighlightEdgeGroups(groups) {
   if (!groups || groups.length === 0) return;
 
   const preparedGroups = [];
-  let dynamicHighlightedEdgeCount = 0;
 
   for (const group of groups) {
     if (!group?.nodeSet || group.nodeSet.size === 0) continue;
@@ -922,9 +921,6 @@ export function showHighlightEdgeGroups(groups) {
       opacity: group.opacity,
       dynamicOpacity: useDynamicOpacity,
     });
-    if (useDynamicOpacity) {
-      dynamicHighlightedEdgeCount += pairs.length;
-    }
   }
 
   for (const group of preparedGroups) {
@@ -935,7 +931,7 @@ export function showHighlightEdgeGroups(groups) {
       group.opacity,
       {
         dynamicOpacity: group.dynamicOpacity,
-        highlightedEdgeCount: dynamicHighlightedEdgeCount,
+        highlightedEdgeCount: group.pairs.length,
       },
     );
     highlightLayers.push(layer);
