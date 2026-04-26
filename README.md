@@ -1,5 +1,7 @@
 # ML Knowledge Graph Explorer
 
+try at: https://the-palindrome.github.io/ml-knowledge-graph/
+
 Interactive 3D knowledge graph visualizer for 2,081 machine learning and mathematics concepts with 5,149 prerequisite edges. Explore the graph in three dimensions — rotate, zoom, pan — with multiple layout algorithms and upstream dependency highlighting.
 
 The graph was built by the `build-knowledge-graph` skill, invoked by the prompt
